@@ -226,26 +226,26 @@ class PIC:
 
             # 3.5 Interpolate grids(V(Potential)) to particles
             # 3.5. iteration save
-            if i%5 == 0:
+            if i%100 == 0:
                 e_particlePotential = CumulativeInterpolater.potentialToParticle(self.grid_length, gridPotential, e_pRDC, e_count)
                 i_particlePotential = CumulativeInterpolater.potentialToParticle(self.grid_length, gridPotential, i_pRDC, i_count)
                 energy = np.sum(0.5*self.me*(self.v_e**2) + 0.5*self.mi*(self.v_i**2) + self.qe*e_particlePotential + self.ie*i_particlePotential)
-                self.inform_systemTotalEnergy.append([energy])
-                """
-                r_temp = [0,0,0,0,0]
-                v_temp = [0,0,0,0,0]
+                self.inform_systemTotalEnergy.append([i*timeStep, energy])
+                
+                r_temp = [i*timeStep,0,0,0,0,0]
+                v_temp = [i*timeStep,0,0,0,0,0]
                 temp_count = 0
                 for real, indx  in enumerate(self.p_e):
                     if indx == 0 or indx == 1 or indx == 2 or indx == 3 or indx == 4:
-                        r_temp[indx] = self.r_e[real]
-                        v_temp[indx] = self.v_e[real]
+                        r_temp[indx+1] = self.r_e[real]
+                        v_temp[indx+1] = self.v_e[real]
                         temp_count += 1
                         if temp_count == 5:
                             break
                 self.inform_electronLocation.append(r_temp)
                 self.inform_electronVelocity.append(v_temp)
-                self.inform_gridChargeDenstiy.append(gridChargeDensity)
-                """
+                self.inform_gridChargeDenstiy.append(np.concatenate(([i*timeStep], gridChargeDensity), axis=0))
+                
             
             # 4. Move Particles
             self.v_e += (self.qe / self.me) * e_particleElectricField * timeStep
@@ -285,14 +285,14 @@ class PIC:
             self.r_e, self.v_e, self.p_e = self.rvSort(self.r_e, self.v_e, self.p_e)
             self.r_i, self.v_i, self.p_i = self.rvSort(self.r_i, self.v_i, self.p_i)
         
-        #csvSaver.listToCsv(self.inform_electronLocation, "test_loc.csv")
-        #csvSaver.listToCsv(self.inform_electronVelocity, "test_vel.csv")
-        #csvSaver.listToCsv(self.inform_gridChargeDenstiy, "test_GCD.csv")
-        csvSaver.listToCsv(self.inform_systemTotalEnergy, "test_Energy2.csv")
+        csvSaver.listToCsv(self.inform_electronLocation, "test3_loc.csv")
+        csvSaver.listToCsv(self.inform_electronVelocity, "test3_vel.csv")
+        csvSaver.listToCsv(self.inform_gridChargeDenstiy, "test3_GCD.csv")
+        csvSaver.listToCsv(self.inform_systemTotalEnergy, "test3_Energy.csv")
             
-a = PIC(T=30, L=10, A=0.08, CellN=100, W=1000, Ne=2000, Ni=2000)
+a = PIC(T=300, L=10, A=0.08, CellN=500, W=1000, Ne=1000, Ni=1000)
 a.generateParticles()
-a.simulationStart(5e-6,1e-10)
+a.simulationStart(5e-2,1e-7)
 
 
 #print(CumulativeInterpolater.linearInterpolate(np.array([1]), 1, 11))
